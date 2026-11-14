@@ -32,13 +32,13 @@ A modular, menu-driven CLI toolkit built for **Termux (Android), Linux, macOS, a
 ## Installation & Setup
 
 1. **Extract the zip archive and enter the project folder:**
-   ```bash
+   ```
    unzip roblox_pipeline_toolkit.zip
    cd roblox_pipeline_toolkit
    ```
 
 2. **Run the cross-platform build script:**
-   ```bash
+   ```
    chmod +x build.sh
    ./build.sh
    ```
@@ -49,15 +49,12 @@ A modular, menu-driven CLI toolkit built for **Termux (Android), Linux, macOS, a
    * Marks all `.sh` and `.py` scripts executable and generates `publish_config.json` from `publish_config.example.json`.
 
 3. **Activate the Python virtual environment before running tools:**
-   ```bash
+```
    source .venv/bin/activate
-   ```
    *(On Windows Git Bash, run `source .venv/Scripts/activate`.)*
 
-## Usage
-
 Launch the interactive console from the toolkit folder:
-```
+
 ./roblox_pipeline.sh
 ```
 *(The script automatically activates `.venv` in the background if present.)*
@@ -76,7 +73,6 @@ Launch the interactive console from the toolkit folder:
 ### 2. Configure `publish_config.json` & Environment Variables
 Edit `publish_config.json` with your Universe ID, Place ID, and API Key:
 ```
-json
 {
   "universe_id": 1234567890,
   "place_id": 9876543210,
@@ -86,7 +82,7 @@ json
 }
 ```
 Export `ROBLOX_API_KEY` in your shell if using the Node.js downloader scripts directly:
-```bash
+``` 
 export ROBLOX_API_KEY="YOUR_ROBLOX_OPEN_CLOUD_API_KEY"
 ```
 * **Security:** `publish_config.json` is listed in `.gitignore` so your API key is never committed to Git.
@@ -103,7 +99,7 @@ source .venv/bin/activate
 ## Usage
 
 Launch the interactive console from the toolkit folder:
-```bash
+
 ./roblox_pipeline.sh
 ```
 *(The script automatically activates `.venv` in the background if present.)*
@@ -125,7 +121,6 @@ The toolkit tracks per-file repair and audit progress in **`file_checklists.json
 
 * **Automatic Tracking:** Each time you run a repair, schema fix, Lua audit, or Open Cloud check on a file, its status flags are updated in `file_checklists.json`:
   ```
-  json
   {
     "your_place.rbxlx": {
       "Vector3": true,
@@ -152,7 +147,6 @@ You can expand the console menu in two ways:
 ### Method 2: Edit `pipeline_steps.json` Manually
 Add a new object to the `steps` array in `pipeline_steps.json`:
 ```
-json
 {
   "id": "custom_fix",
   "name": "My Custom Schema Fixer",
