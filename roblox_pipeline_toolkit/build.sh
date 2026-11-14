@@ -1,39 +1,29 @@
-#!/data/data/com.termux/files/usr/bin/bash
-
+#!/usr/bin/env bash
 set -euo pipefail
 
-echo "================================================"
-echo "   BUILDING ROBLOX PIPELINE TOOLKIT"
-echo "================================================"
-
+echo "=== BUILDING ROBLOX PIPELINE TOOLKIT ==="
 if command -v pkg >/dev/null 2>&1; then
-    echo "[1/4] Checking Termux packages (python, jq, curl, git, zip)..."
-    pkg install -y python jq curl git zip >/dev/null 2>&1 || true
+    pkg install -y python nodejs-lts rust curl git zip >/dev/null 2>&1 || true
+elif command -v brew >/dev/null 2>&1; then
+    brew install python node rust curl git zip >/dev/null 2>&1 || true
 fi
 
-echo "[2/4] Installing Python dependencies (lz4, zstandard)..."
-python3 -m pip install --quiet --upgrade pip >/dev/null 2>&1 || true
-python3 -m pip install --quiet lz4 zstandard
+for tool in python3 node cargo curl git zip; do
+    command -v "$tool" >/dev/null 2>&1 || echo "  [WARN] Missing tool: $tool"
+done
 
-echo "[3/4] Setting executable permissions on all scripts..."
+[ -d ".venv" ] || python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --quiet --upgrade pip >/dev/null 2>&1 || true
+python -m pip install --quiet -r requirements.txt
+
+if [ -f "Cargo.toml" ] && command -v cargo >/dev/null 2>&1; then
+    cargo build --quiet
+    [ -f "target/debug/rbxlx" ] && cp target/debug/rbxlx bin/
+fi
+
+mkdir -p downloads converted fixed published bin
 chmod +x *.sh *.py 2>/dev/null || true
+[ -f "publish_config.json" ] || cp publish_config.example.json publish_config.json
 
-if [ ! -f "publish_config.json" ]; then
-    cp publish_config.example.json publish_config.json
-    echo "[4/4] Created publish_config.json from template (edit with your API key & IDs)."
-else
-    echo "[4/4] Found existing publish_config.json (preserved)."
-fi
-
-if [ -f "pipeline_steps.json" ] && command -v jq >/dev/null 2>&1; then
-    tmp_reg=$(mktemp)
-    jq '.steps |= sort_by(.category)' pipeline_steps.json > "$tmp_reg" && mv "$tmp_reg" pipeline_steps.json
-fi
-
-echo ""
-echo "================================================"
-echo "   BUILD COMPLETE!"
-echo "================================================"
-echo "  1. Edit publish_config.json with your Universe ID, Place ID, and API Key."
-echo "  2. Launch the menu: ./roblox_pipeline.sh"
-echo ""
+echo "BUILD COMPLETE! Run: source .venv/bin/activate && ./roblox_pipeline.sh"

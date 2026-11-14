@@ -1,0 +1,311 @@
+{
+  "active_file": "downloads/5560892079.rbxl",
+  "files": {
+    "original_2.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": false,
+        "Vector2": false,
+        "Color3": false,
+        "UDim2": true,
+        "Rect2D": false,
+        "Font": false,
+        "PhysicalProperties": false,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "original_3.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": true,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": true
+      },
+      "last_error": "None"
+    },
+    "original_4.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": false,
+        "Vector3": false,
+        "Vector2": false,
+        "Color3": false,
+        "UDim2": true,
+        "Rect2D": false,
+        "Font": false,
+        "PhysicalProperties": false,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "fixed_place.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": false,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "16089886249_with_MartialCombat.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": false,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "ready_to_publish.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": false,
+        "CoordinateFrame": false,
+        "Vector3": false,
+        "Vector2": false,
+        "Color3": false,
+        "UDim2": false,
+        "Rect2D": false,
+        "Font": false,
+        "PhysicalProperties": false,
+        "LuaScriptsFixed": false,
+        "OpenCloudReady": false
+      },
+      "last_error": "mismatched tag: line 22607, column 14"
+    },
+    "JumpJump.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": true,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": true
+      },
+      "last_error": "None"
+    },
+    "martial_jump.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": false,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "martial_jumpjump.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": false,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "project.rbxmx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": false,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": false,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "MartialCombat.rbxmx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": true,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "MartialCombat.rbxm": {
+      "type": "binary_model",
+      "Fixed": {
+        "converted": false,
+        "convertedto": ""
+      },
+      "last_error": "None"
+    },
+    "downloads/16089886249.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": false,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "downloads/74489838082449.rbxm": {
+      "type": "binary_model",
+      "Fixed": {
+        "converted": false,
+        "convertedto": ""
+      },
+      "last_error": "None"
+    },
+    "converted/74489838082449.rbxmx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": false,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "fixed/74489838082449.rbxmx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": true,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": false
+      },
+      "last_error": "None"
+    },
+    "fixed/model_added_to_place.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": true,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": true
+      },
+      "last_error": "None"
+    },
+    "published/model_added_to_place.rbxlx": {
+      "type": "xml_asset",
+      "Fixed": {
+        "ValidXML": true,
+        "CoordinateFrame": true,
+        "Vector3": true,
+        "Vector2": true,
+        "Color3": true,
+        "UDim2": true,
+        "Rect2D": true,
+        "Font": true,
+        "PhysicalProperties": true,
+        "LuaScriptsFixed": true,
+        "OpenCloudReady": true
+      },
+      "last_error": "None"
+    },
+    "copy/5560892079_copy.rbxl": {
+      "type": "binary_place",
+      "Fixed": {
+        "copied_to_copy_folder": true,
+        "copy_path": "copy/5560892079_copy.rbxl",
+        "published": false
+      },
+      "last_error": "None"
+    },
+    "downloads/5560892079.rbxl": {
+      "type": "binary_place",
+      "Fixed": {
+        "copied_to_copy_folder": false,
+        "copy_path": "",
+        "published": false
+      },
+      "last_error": "None"
+    }
+  }
+}

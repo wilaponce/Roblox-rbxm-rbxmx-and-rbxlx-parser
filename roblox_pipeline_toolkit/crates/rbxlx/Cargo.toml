@@ -1,0 +1,8 @@
+[package]
+name = "rbxlx"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rbx_dom_weak = "2"
+rbx_xml = "0.13"

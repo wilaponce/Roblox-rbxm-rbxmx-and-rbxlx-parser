@@ -1,13 +1,9 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
 
 REGISTRY="pipeline_steps.json"
-
-if [ ! -f "$REGISTRY" ]; then
-    echo "[ERROR] Missing $REGISTRY. Please create it first."
-    exit 1
-fi
+mkdir -p downloads copy converted fixed published
 
 select_file() {
     local prompt_title="$1"
@@ -18,14 +14,14 @@ select_file() {
     for ext in "${exts[@]}"; do
         while IFS= read -r -d '' f; do
             files+=("${f#./}")
-        done < <(find . -maxdepth 1 -type f -name "*.${ext}" -print0 2>/dev/null)
+        done < <(find . ./downloads ./converted ./copy ./repaired ./fixed ./published -maxdepth 1 -type f -name "*.${ext}" -print0 2>/dev/null)
     done
 
     IFS=$'\n' files=($(sort -u <<<"${files[*]:-}"))
     unset IFS
 
     if [ ${#files[@]} -eq 0 ]; then
-        echo -e "\n[ERROR] No matching files found (${exts[*]}) in current directory." >&2
+        echo -e "\n[ERROR] No matching files found (${exts[*]})." >&2
         return 1
     fi
 
@@ -37,7 +33,7 @@ select_file() {
         local sz
         sz=$(wc -c < "$f" | tr -d ' ')
         printf "  %2d) %s (%s bytes)\n" "$i" "$f" "$sz" >&2
-        ((i++))
+        i=$((i + 1))
     done
     echo "   0) Cancel" >&2
     echo "" >&2
@@ -55,60 +51,104 @@ select_file() {
     done
 }
 
-backup_file() {
-    local target="$1"
-    local ts
-    ts=$(date +%Y%m%d_%H%M%S)
-    local bak="${target}.${ts}.bak"
-    cp "$target" "$bak"
-    echo "[BACKUP] Created: $bak"
+# Copy selected file into fixed/ without modifying original
+stage_in_fixed() {
+    local src="$1"
+    local base
+    base=$(basename "$src")
+    local dst="fixed/$base"
+    if [ "$src" != "$dst" ]; then
+        cp "$src" "$dst"
+        echo "[STAGED] Copied original -> $dst (original untouched)" >&2
+    fi
+    echo "$dst"
 }
 
 invoke_script() {
     local script="$1"
     shift
-    if [ ! -f "$script" ]; then
-        echo "[ERROR] Script not found in workspace: $script"
-        return 1
-    fi
     case "$script" in
         *.py)   python3 "$script" "$@" ;;
         *.sh)   bash "$script" "$@" ;;
         *.luau) lune run "$script" "$@" ;;
+        *.js)   node "$script" "$@" ;;
         *)      "./$script" "$@" ;;
     esac
 }
 
-execute_step_index() {
-    local idx="$1"
+run_step_json() {
+    local step_json="$1"
     local preset_target="${2:-}"
 
-    local label script mode backup log_file default_out
-    label=$(jq -r ".steps[$idx].label" "$REGISTRY")
-    script=$(jq -r ".steps[$idx].script" "$REGISTRY")
-    mode=$(jq -r ".steps[$idx].mode" "$REGISTRY")
-    backup=$(jq -r ".steps[$idx].backup" "$REGISTRY")
-    log_file=$(jq -r ".steps[$idx].log_file // empty" "$REGISTRY")
-    default_out=$(jq -r ".steps[$idx].default_out // \"merged_output.rbxlx\"" "$REGISTRY")
+    local id label script mode log_file default_out prompt_txt
+    id=$(echo "$step_json" | jq -r '.id // empty')
+    label=$(echo "$step_json" | jq -r '.label')
+    script=$(echo "$step_json" | jq -r '.script // empty')
+    mode=$(echo "$step_json" | jq -r '.mode')
+    log_file=$(echo "$step_json" | jq -r '.log_file // empty')
+    default_out=$(echo "$step_json" | jq -r '.default_out // "merged_place.rbxlx"')
+    prompt_txt=$(echo "$step_json" | jq -r '.prompt // "Enter Asset ID: "')
 
-    mapfile -t exts < <(jq -r ".steps[$idx].exts[]" "$REGISTRY")
-    mapfile -t exts2 < <(jq -r ".steps[$idx].exts2[]? // empty" "$REGISTRY")
+    if [ "$mode" = "submenu" ]; then
+        local skey
+        skey=$(echo "$step_json" | jq -r '.submenu_key')
+        open_submenu "$skey" "$label"
+        return
+    fi
 
-    if [ "$script" = "BUILTIN_BACKUP" ]; then
-        if select_file "Select file to back up:" "${exts[@]}"; then
-            backup_file "$SELECTED_FILE"
+    if [ "$mode" = "prompt_asset_id" ]; then
+        read -rp "$prompt_txt" asset_id </dev/tty
+        if [ -n "$asset_id" ]; then
+            invoke_script "$script" "$asset_id"
         fi
         return
     fi
 
+    mapfile -t exts < <(echo "$step_json" | jq -r '.exts[]? // empty')
+    mapfile -t exts2 < <(echo "$step_json" | jq -r '.exts2[]? // empty')
+
+    # Special handling: Convert .rbxm -> converted/<name>.rbxmx
+    if [ "$id" = "convert_rbxm" ]; then
+        select_file "Select binary .rbxm to convert:" "${exts[@]}" || return
+        local src="$SELECTED_FILE"
+        local base
+        base=$(basename "$src" .rbxm)
+        local dst="converted/${base}.rbxmx"
+        set +e
+        out=$(invoke_script "$script" "$src" "$dst" 2>&1)
+        rc=$?
+        set -e
+        echo "$out"
+        if [ $rc -eq 0 ] && [ -f "$dst" ]; then
+            python3 state_manager.py mark_converted "$src" "$dst"
+            python3 state_manager.py update_xml_status "$dst" "NONE"
+        else
+            python3 state_manager.py update_xml_status "$src" "$out"
+        fi
+        return
+    fi
+
+    # Special handling: Publish -> copy to published/ and upload
     if [ "$script" = "BUILTIN_PUBLISH" ]; then
-        if select_file "Select place file to publish:" "${exts[@]}"; then
-            if [ -f "publish_config.json" ]; then
-                tmp_cfg=$(mktemp)
-                jq --arg f "$SELECTED_FILE" '.rbxlx_file = $f' publish_config.json > "$tmp_cfg" && mv "$tmp_cfg" publish_config.json
-                echo "[CONFIG] Updated publish_config.json -> rbxlx_file = \"$SELECTED_FILE\""
-            fi
-            ./roblox_publish.sh publish
+        select_file "Select place file to publish:" "${exts[@]}" || return
+        local src="$SELECTED_FILE"
+        local base
+        base=$(basename "$src")
+        local pub_copy="published/$base"
+        [ "$src" != "$pub_copy" ] && cp "$src" "$pub_copy"
+        if [ -f "publish_config.json" ]; then
+            tmp_cfg=$(mktemp)
+            jq --arg f "$pub_copy" '.rbxlx_file = $f' publish_config.json > "$tmp_cfg" && mv "$tmp_cfg" publish_config.json
+        fi
+        set +e
+        out=$(./roblox_publish.sh publish 2>&1)
+        rc=$?
+        set -e
+        echo "$out"
+        if [ $rc -eq 0 ]; then
+            python3 state_manager.py mark_published "$src"
+        else
+            python3 state_manager.py update_xml_status "$src" "$out"
         fi
         return
     fi
@@ -119,11 +159,38 @@ execute_step_index() {
             select_file "Select file for [$label] ($script):" "${exts[@]}" || return
             target="$SELECTED_FILE"
         fi
-        [ "$backup" = "true" ] && [ -z "$preset_target" ] && backup_file "$target"
-        if [ -n "$log_file" ]; then
-            invoke_script "$script" "$target" | tee "$log_file"
+        # Read-only checks run directly; repair scripts stage into fixed/ first
+        if [[ "$id" == check_* ]] || [[ "$id" == verify_* ]] || [[ "$id" == audit_merge* ]] || [[ "$id" == diagnose_* ]]; then
+            set +e
+            out=$(invoke_script "$script" "$target" 2>&1)
+            rc=$?
+            set -e
+            echo "$out"
+            if [[ "$target" == *.rbxlx ]] || [[ "$target" == *.rbxmx ]]; then
+                if [ $rc -eq 0 ] && ! echo "$out" | grep -qE '\[FAIL\]|\[NOT READY\]|\[ISSUES FOUND\]'; then
+                    python3 state_manager.py update_xml_status "$target" "NONE"
+                else
+                    python3 state_manager.py update_xml_status "$target" "$out"
+                fi
+            fi
         else
-            invoke_script "$script" "$target"
+            local staged
+            staged=$(stage_in_fixed "$target")
+            set +e
+            if [ -n "$log_file" ]; then
+                out=$(invoke_script "$script" "$staged" 2>&1 | tee "$log_file")
+                rc=${PIPESTATUS}
+            else
+                out=$(invoke_script "$script" "$staged" 2>&1)
+                rc=$?
+            fi
+            set -e
+            echo "$out"
+            if [ $rc -eq 0 ]; then
+                python3 state_manager.py update_xml_status "$staged" "NONE"
+            else
+                python3 state_manager.py update_xml_status "$staged" "$out"
+            fi
         fi
 
     elif [ "$mode" = "pair" ]; then
@@ -131,139 +198,161 @@ execute_step_index() {
         local f1="$SELECTED_FILE"
         select_file "Select SECOND / TARGET file for [$label]:" "${exts2[@]}" || return
         local f2="$SELECTED_FILE"
-        [ "$backup" = "true" ] && backup_file "$f2"
-        invoke_script "$script" "$f1" "$f2"
+        if [[ "$id" == diff_* ]]; then
+            invoke_script "$script" "$f1" "$f2"
+        else
+            local staged
+            staged=$(stage_in_fixed "$f2")
+            invoke_script "$script" "$f1" "$staged"
+            python3 state_manager.py update_xml_status "$staged" "NONE"
+        fi
 
     elif [ "$mode" = "merge_to_output" ]; then
-        select_file "Select BASE file for [$label]:" "${exts[@]}" || return
+        select_file "Select BASE Place file for [$label]:" "${exts[@]}" || return
         local f1="$SELECTED_FILE"
-        select_file "Select MODEL / SOURCE file to merge:" "${exts2[@]}" || return
+        select_file "Select MODEL file to install:" "${exts2[@]}" || return
         local f2="$SELECTED_FILE"
-        read -rp "Output filename [default: $default_out]: " out_f
-        out_f="${out_f:-$default_out}"
-        invoke_script "$script" "$f1" "$f2" "$out_f"
+        read -rp "Output filename inside fixed/ [default: $default_out]: " out_name </dev/tty
+        out_name=$(basename "${out_name:-$default_out}")
+        local out_f="fixed/$out_name"
+        set +e
+        out=$(invoke_script "$script" "$f1" "$f2" "$out_f" 2>&1)
+        rc=$?
+        set -e
+        echo "$out"
+        if [ $rc -eq 0 ] && [ -f "$out_f" ]; then
+            python3 state_manager.py update_xml_status "$out_f" "NONE"
+        else
+            python3 state_manager.py update_xml_status "$f1" "$out"
+        fi
     fi
 }
 
+open_submenu() {
+    local skey="$1"
+    local title="$2"
+    while true; do
+        local count
+        count=$(jq ".submenus[\"$skey\"] | length" "$REGISTRY")
+        echo -e "\n------------------------------------------------------------"
+        echo "  $title"
+        echo "------------------------------------------------------------"
+        for ((j=0; j<count; j++)); do
+            local lbl scr
+            lbl=$(jq -r ".submenus[\"$skey\"][$j].label" "$REGISTRY")
+            scr=$(jq -r ".submenus[\"$skey\"][$j].script" "$REGISTRY")
+            printf "  %2d) %s (%s)\n" "$((j + 1))" "$lbl" "$scr"
+        done
+        echo "   0) <- Back to Main Menu"
+        echo "------------------------------------------------------------"
+        read -rp "Select option [0-$count]: " sub_choice </dev/tty
+        if [ "$sub_choice" = "0" ]; then
+            return
+        elif [[ "$sub_choice" =~ ^[0-9]+$ ]] && [ "$sub_choice" -ge 1 ] && [ "$sub_choice" -le "$count" ]; then
+            local sjson
+            sjson=$(jq -c ".submenus[\"$skey\"][$((sub_choice - 1))]" "$REGISTRY")
+            run_step_json "$sjson"
+        else
+            echo "Invalid selection."
+        fi
+    done
+}
+
 add_new_step() {
-    echo -e "\n=== Register New Script in Pipeline ==="
-    read -rp "Script filename (e.g., fix_sounds.py or custom.luau): " new_script
-    if [ -z "$new_script" ]; then return; fi
-    read -rp "Menu label (e.g., Fix Broken Sound IDs): " new_label
-    echo "Categories:"
-    echo "  1) 1. BACKUP & XML STRUCTURE REPAIR"
-    echo "  2) 2. MODEL MERGE & SCHEMA SYNC"
-    echo "  3) 3. LUA SCRIPT REPAIR & SYNTAX AUDIT"
-    echo "  4) 4. VERIFICATION, DIFF & PUBLISH"
-    read -rp "Choose category [1-4]: " cat_num
-    case "$cat_num" in
-        1) new_cat="1. BACKUP & XML STRUCTURE REPAIR" ;;
-        2) new_cat="2. MODEL MERGE & SCHEMA SYNC" ;;
-        3) new_cat="3. LUA SCRIPT REPAIR & SYNTAX AUDIT" ;;
-        *) new_cat="4. VERIFICATION, DIFF & PUBLISH" ;;
-    esac
-    echo "Execution mode:"
-    echo "  1) single (takes 1 file)"
-    echo "  2) pair (takes 2 files: reference + target)"
-    echo "  3) merge_to_output (takes 2 files + output filename)"
-    read -rp "Choose mode [1-3]: " mode_num
-    case "$mode_num" in
-        2) new_mode="pair" ;;
-        3) new_mode="merge_to_output" ;;
-        *) new_mode="single" ;;
-    esac
-    read -rp "Allowed extensions space-separated [default: rbxlx rbxmx]: " ext_str
+    echo -e "\n=== Register New Script in Menu ==="
+    read -rp "Script filename (e.g., fix_sounds.py): " new_script </dev/tty
+    [ -z "$new_script" ] && return
+    read -rp "Menu label: " new_label </dev/tty
+    echo "Where should it appear?"
+    echo "  1) Main Menu"
+    echo "  2) XML Structure & Tag Repairs Submenu"
+    echo "  3) Additional Repairs & Lua Audits Submenu"
+    read -rp "Choose location [1-3]: " loc </dev/tty
+    read -rp "Allowed extensions space-separated [default: rbxlx rbxmx]: " ext_str </dev/tty
     ext_str="${ext_str:-rbxlx rbxmx}"
-    read -rp "Create automatic backup before running? (y/n) [y]: " bak_ans
-    [[ "${bak_ans:-y}" =~ ^[Yy]$ ]] && new_bak="true" || new_bak="false"
-    read -rp "Include in Full Repair Pipeline (Option P)? (y/n) [n]: " pipe_ans
+    read -rp "Include in Full Auto-Pipeline (Option P)? (y/n) [n]: " pipe_ans </dev/tty
     [[ "${pipe_ans:-n}" =~ ^[Yy]$ ]] && new_pipe="true" || new_pipe="false"
 
-    local exts_json
+    local exts_json new_id
     exts_json=$(printf '%s\n' $ext_str | jq -R . | jq -s .)
-    local new_id
     new_id=$(echo "$new_script" | tr -cd 'a-zA-Z0-9_')
 
-    tmp_reg=$(mktemp)
-    jq --arg id "$new_id" \
-       --arg cat "$new_cat" \
-       --arg lbl "$new_label" \
-       --arg scr "$new_script" \
-       --arg mod "$new_mode" \
-       --argjson exts "$exts_json" \
-       --argjson bak "$new_bak" \
-       --argjson pip "$new_pipe" \
-       '.steps += [{
-         "id": $id,
-         "category": $cat,
-         "label": $lbl,
-         "script": $scr,
-         "mode": $mod,
-         "exts": $exts,
-         "exts2": $exts,
-         "backup": $bak,
-         "in_full_pipeline": $pip
-       }] | sort_by(.category)' "$REGISTRY" > "$tmp_reg" && mv "$tmp_reg" "$REGISTRY"
+    local entry
+    entry=$(jq -n \
+        --arg id "$new_id" \
+        --arg lbl "$new_label" \
+        --arg scr "$new_script" \
+        --argjson exts "$exts_json" \
+        --argjson pip "$new_pipe" \
+        '{id:$id, label:$lbl, script:$scr, mode:"single", exts:$exts, backup:true, in_full_pipeline:$pip}')
 
-    echo "[ADDED] '$new_label' ($new_script) saved to $REGISTRY!"
+    tmp_reg=$(mktemp)
+    case "$loc" in
+        2) jq --argjson e "$entry" '.submenus.xml_repairs += [$e]' "$REGISTRY" > "$tmp_reg" ;;
+        3) jq --argjson e "$entry" '.submenus.additional_repairs += [$e]' "$REGISTRY" > "$tmp_reg" ;;
+        *) jq --argjson e "$entry" '.main_steps += [$e]' "$REGISTRY" > "$tmp_reg" ;;
+    esac
+    mv "$tmp_reg" "$REGISTRY"
+    echo "[ADDED] '$new_label' registered in $REGISTRY!"
 }
 
 while true; do
     echo
     echo "============================================================"
-    echo "   MODULAR ROBLOX PIPELINE (Powered by $REGISTRY)"
+    echo "   MODULAR ROBLOX PIPELINE"
     echo "============================================================"
 
-    total_steps=$(jq '.steps | length' "$REGISTRY")
-    last_cat=""
-
-    for ((i=0; i<total_steps; i++)); do
-        cat=$(jq -r ".steps[$i].category" "$REGISTRY")
-        lbl=$(jq -r ".steps[$i].label" "$REGISTRY")
-        scr=$(jq -r ".steps[$i].script" "$REGISTRY")
-        if [ "$cat" != "$last_cat" ]; then
-            echo "  --- $cat ---"
-            last_cat="$cat"
+    total_main=$(jq '.main_steps | length' "$REGISTRY")
+    for ((i=0; i<total_main; i++)); do
+        lbl=$(jq -r ".main_steps[$i].label" "$REGISTRY")
+        scr=$(jq -r ".main_steps[$i].script // empty" "$REGISTRY")
+        disp=""
+        if [ -n "$scr" ] && [[ "$scr" != BUILTIN_* ]]; then
+            disp=" ($scr)"
         fi
-        display_scr=""
-        [[ "$scr" != BUILTIN_* ]] && display_scr=" ($scr)"
-        printf "  %2d) %s%s\n" "$((i + 1))" "$lbl" "$display_scr"
+        printf "  %2d) %s%s\n" "$((i + 1))" "$lbl" "$disp"
     done
 
     echo ""
-    echo "  --- PIPELINE & EXPANSION ---"
+    echo "  --- PIPELINE, CHECKLIST & EXPANSION ---"
+    echo "   V) View Checklist of Any File"
     echo "   P) Run Full Auto-Pipeline (all flagged steps in order)"
     echo "   A) Add / Register a New Script to Menu"
     echo "   0) Exit"
     echo "============================================================"
-    read -rp "Choose an option: " opt
+    echo "  --- ACTIVE FILE CHECKLIST ---"
+    python3 state_manager.py show
+    echo "============================================================"
+    read -rp "Choose an option: " opt </dev/tty
 
     case "${opt^^}" in
         0)
             echo "Exiting."
             exit 0
             ;;
+        V)
+            if select_file "Select any file to view & activate its checklist:" rbxlx rbxmx rbxl rbxm; then
+                python3 state_manager.py set_active "$SELECTED_FILE"
+            fi
+            ;;
         A)
             add_new_step
             ;;
         P)
             if select_file "Select .rbxlx file to run FULL AUTO-PIPELINE on:" rbxlx; then
-                TARGET="$SELECTED_FILE"
-                backup_file "$TARGET"
-                for ((i=0; i<total_steps; i++)); do
-                    in_pipe=$(jq -r ".steps[$i].in_full_pipeline" "$REGISTRY")
-                    if [ "$in_pipe" = "true" ]; then
-                        lbl=$(jq -r ".steps[$i].label" "$REGISTRY")
-                        echo -e "\n>>> Running Pipeline Step: $lbl"
-                        execute_step_index "$i" "$TARGET"
-                    fi
-                done
-                echo -e "\n[PIPELINE COMPLETE] Finished all enabled steps on $TARGET."
+                TARGET=$(stage_in_fixed "$SELECTED_FILE")
+                while IFS= read -r sjson; do
+                    lbl=$(echo "$sjson" | jq -r '.label')
+                    echo -e "\n>>> Running Auto-Pipeline Step: $lbl"
+                    run_step_json "$sjson" "$TARGET"
+                done < <(jq -c '[.submenus.xml_repairs[], .submenus.additional_repairs[], .main_steps[]] | .[] | select(.in_full_pipeline == true)' "$REGISTRY")
+                echo -e "\n[PIPELINE COMPLETE] Finished all auto-pipeline steps on $TARGET."
             fi
             ;;
         *)
-            if [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 1 ] && [ "$opt" -le "$total_steps" ]; then
-                execute_step_index "$((opt - 1))"
+            if [[ "$opt" =~ ^[0-9]+$ ]] && [ "$opt" -ge 1 ] && [ "$opt" -le "$total_main" ]; then
+                sjson=$(jq -c ".main_steps[$((opt - 1))]" "$REGISTRY")
+                run_step_json "$sjson"
             else
                 echo "Invalid selection."
             fi
