@@ -78,10 +78,12 @@ Edit `publish_config.json` with your Universe ID, Place ID, and API Key:
   "place_id": 9876543210,
   "api_key": "YOUR_ROBLOX_OPEN_CLOUD_API_KEY",
   "rbxlx_file": "samples/sample_baseplate.rbxlx",
-  "publish_endpoint": "https://roblox.com"
+  "publish_endpoint": "https://apis.roblox.com/universes/v1/{universe-id}/places/{placee-id}/versions?versionType=Published""
 }
 ```
 Export `ROBLOX_API_KEY` in your shell if using the Node.js downloader scripts directly:
+
+Update `publish_endpoint` add your `universe-id` and `place-id` otherwise it will not publish.
 ``` 
 export ROBLOX_API_KEY="YOUR_ROBLOX_OPEN_CLOUD_API_KEY"
 ```
