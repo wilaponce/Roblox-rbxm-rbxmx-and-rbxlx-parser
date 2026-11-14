@@ -426,3 +426,16 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+/roblox_pipeline_toolkik
+
+publish_config.json
+publish_response.json
+publish_report.json
+latest_version.txt
+lua_audit_report.txt
+*.bak
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+*.pyc

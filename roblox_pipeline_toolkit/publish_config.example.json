@@ -1,0 +1,7 @@
+{
+  "universe_id": 0,
+  "place_id": 0,
+  "api_key": "YOUR_ROBLOX_OPEN_CLOUD_API_KEY",
+  "rbxlx_file": "your_place.rbxlx",
+  "publish_endpoint": "https://roblox.com"
+}

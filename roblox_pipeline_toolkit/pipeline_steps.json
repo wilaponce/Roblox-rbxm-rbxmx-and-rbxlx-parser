@@ -1,0 +1,263 @@
+{
+  "steps": [
+    {
+      "id": "backup",
+      "category": "1. BACKUP & XML STRUCTURE REPAIR",
+      "label": "Create Timestamped Backup",
+      "script": "BUILTIN_BACKUP",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxmx",
+        "rbxl"
+      ],
+      "backup": false,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "repair_xml",
+      "category": "1. BACKUP & XML STRUCTURE REPAIR",
+      "label": "Full XML Tag & Schema Repair",
+      "script": "repair_rbxlx.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxmx"
+      ],
+      "backup": true,
+      "in_full_pipeline": true
+    },
+    {
+      "id": "fix_cframe",
+      "category": "1. BACKUP & XML STRUCTURE REPAIR",
+      "label": "Fix CoordinateFrame Tag Order",
+      "script": "fix_cframe.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxmx"
+      ],
+      "backup": true,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "fix_vector2d",
+      "category": "1. BACKUP & XML STRUCTURE REPAIR",
+      "label": "Fix Vector2 / Rect2D Schemas",
+      "script": "fix_vector2d.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxmx"
+      ],
+      "backup": true,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "fix_colors",
+      "category": "1. BACKUP & XML STRUCTURE REPAIR",
+      "label": "Convert Color3uint8 to Color3",
+      "script": "fix_colors.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxmx"
+      ],
+      "backup": true,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "fix_roblox",
+      "category": "1. BACKUP & XML STRUCTURE REPAIR",
+      "label": "Reorder Standard Multi-Tag Elements",
+      "script": "fix_roblox.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxmx"
+      ],
+      "backup": true,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "merge_rbxm_to_rbxlx",
+      "category": "2. MODEL MERGE & SCHEMA SYNC",
+      "label": "Merge Binary .rbxm into Place (.rbxlx)",
+      "script": "merge_rbxm_to_rbxlx.luau",
+      "mode": "merge_to_output",
+      "exts": [
+        "rbxlx",
+        "rbxl"
+      ],
+      "exts2": [
+        "rbxm"
+      ],
+      "default_out": "merged_with_rbxm.rbxlx",
+      "backup": false,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "install_model",
+      "category": "2. MODEL MERGE & SCHEMA SYNC",
+      "label": "Install .rbxmx Model into Place",
+      "script": "install_martial_combat.py",
+      "mode": "merge_to_output",
+      "exts": [
+        "rbxlx"
+      ],
+      "exts2": [
+        "rbxmx"
+      ],
+      "default_out": "16089886249_with_MartialCombat.rbxlx",
+      "backup": false,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "sync_schema",
+      "category": "2. MODEL MERGE & SCHEMA SYNC",
+      "label": "Sync XML Schema to Working Reference",
+      "script": "sync_rbxlx_schema.py",
+      "mode": "pair",
+      "exts": [
+        "rbxlx"
+      ],
+      "exts2": [
+        "rbxlx"
+      ],
+      "backup": true,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "convert_rbxm_to_rbxmxpy",
+      "category": "2. MODEL MERGE & SCHEMA SYNC",
+      "label": "Convert Binary .rbxm to .rbxmx",
+      "script": "convert_rbxm_to_rbxmx.py",
+      "mode": "single",
+      "exts": [
+        "rbxm"
+      ],
+      "exts2": [
+        "rbxm"
+      ],
+      "backup": true,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "unwrap_strings",
+      "category": "3. LUA SCRIPT REPAIR & SYNTAX AUDIT",
+      "label": "Unwrap String(\"...\") Wrappers",
+      "script": "fix_script_strings.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxmx"
+      ],
+      "backup": true,
+      "in_full_pipeline": true
+    },
+    {
+      "id": "audit_lua",
+      "category": "3. LUA SCRIPT REPAIR & SYNTAX AUDIT",
+      "label": "Audit & Repair All Lua Scripts",
+      "script": "audit_and_fix_lua.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxmx"
+      ],
+      "backup": true,
+      "log_file": "lua_audit_report.txt",
+      "in_full_pipeline": true
+    },
+    {
+      "id": "fix_quotes",
+      "category": "3. LUA SCRIPT REPAIR & SYNTAX AUDIT",
+      "label": "Fix Split Multi-Line Lua Quotes",
+      "script": "fix_split_lua_strings.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxmx"
+      ],
+      "backup": true,
+      "in_full_pipeline": true
+    },
+    {
+      "id": "diagnose_log",
+      "category": "3. LUA SCRIPT REPAIR & SYNTAX AUDIT",
+      "label": "Diagnose Lua Syntax Log",
+      "script": "diagnose_syntax.py",
+      "mode": "single",
+      "exts": [
+        "txt"
+      ],
+      "backup": false,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "audit_merge",
+      "category": "4. VERIFICATION, DIFF & PUBLISH",
+      "label": "Deep Merge & Stream Audit",
+      "script": "audit_merge_issues.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx"
+      ],
+      "backup": false,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "check_schema",
+      "category": "4. VERIFICATION, DIFF & PUBLISH",
+      "label": "Quick Grouped Schema Check",
+      "script": "check_rbxlx.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx"
+      ],
+      "backup": false,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "verify_opencloud",
+      "category": "4. VERIFICATION, DIFF & PUBLISH",
+      "label": "Verify Open Cloud Upload Readiness",
+      "script": "verify_opencloud_place.py",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxl"
+      ],
+      "backup": false,
+      "in_full_pipeline": true
+    },
+    {
+      "id": "diff_files",
+      "category": "4. VERIFICATION, DIFF & PUBLISH",
+      "label": "Compare Two RBXLX Files",
+      "script": "diff_rbxlx.py",
+      "mode": "pair",
+      "exts": [
+        "rbxlx"
+      ],
+      "exts2": [
+        "rbxlx"
+      ],
+      "backup": false,
+      "in_full_pipeline": false
+    },
+    {
+      "id": "publish",
+      "category": "4. VERIFICATION, DIFF & PUBLISH",
+      "label": "Publish Place to Open Cloud",
+      "script": "BUILTIN_PUBLISH",
+      "mode": "single",
+      "exts": [
+        "rbxlx",
+        "rbxl"
+      ],
+      "backup": false,
+      "in_full_pipeline": false
+    }
+  ]
+}
