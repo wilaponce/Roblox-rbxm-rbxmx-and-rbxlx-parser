@@ -54,6 +54,14 @@ A modular, menu-driven CLI toolkit built for **Termux (Android), Linux, macOS, a
    ```
    *(On Windows Git Bash, run `source .venv/Scripts/activate`.)*
 
+## Usage
+
+Launch the interactive console from the toolkit folder:
+```bash
+./roblox_pipeline.sh
+```
+*(The script automatically activates `.venv` in the background if present.)*
+
 ---
 
 ## API Key & Configuration
@@ -90,6 +98,15 @@ Activate your virtual environment and launch the interactive console:
 ```bash
 source .venv/bin/activate
 ./roblox_pipeline.sh
+
+## Usage
+
+Launch the interactive console from the toolkit folder:
+```bash
+./roblox_pipeline.sh
+```
+*(The script automatically activates `.venv` in the background if present.)*
+
 ```
 
 ### End-to-End Workflow Example
