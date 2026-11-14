@@ -57,7 +57,7 @@ A modular, menu-driven CLI toolkit built for **Termux (Android), Linux, macOS, a
 ## Usage
 
 Launch the interactive console from the toolkit folder:
-```bash
+```
 ./roblox_pipeline.sh
 ```
 *(The script automatically activates `.venv` in the background if present.)*
@@ -75,7 +75,8 @@ Launch the interactive console from the toolkit folder:
 
 ### 2. Configure `publish_config.json` & Environment Variables
 Edit `publish_config.json` with your Universe ID, Place ID, and API Key:
-```json
+```
+json
 {
   "universe_id": 1234567890,
   "place_id": 9876543210,
@@ -95,7 +96,7 @@ export ROBLOX_API_KEY="YOUR_ROBLOX_OPEN_CLOUD_API_KEY"
 ## Usage
 
 Activate your virtual environment and launch the interactive console:
-```bash
+```
 source .venv/bin/activate
 ./roblox_pipeline.sh
 
@@ -107,7 +108,6 @@ Launch the interactive console from the toolkit folder:
 ```
 *(The script automatically activates `.venv` in the background if present.)*
 
-```
 
 ### End-to-End Workflow Example
 1. **Download Assets (Optional):** Run `node download_place_rbxl.js <placeId>` or `node download_model_rbxm.js <assetId>` to save files into `downloads/`.
@@ -124,7 +124,8 @@ Launch the interactive console from the toolkit folder:
 The toolkit tracks per-file repair and audit progress in **`file_checklists.json`** (managed by `state_manager.py` and `status_checklist.py`) and displays a live checklist below the console menu.
 
 * **Automatic Tracking:** Each time you run a repair, schema fix, Lua audit, or Open Cloud check on a file, its status flags are updated in `file_checklists.json`:
-  ```json
+  ```
+  json
   {
     "your_place.rbxlx": {
       "Vector3": true,
@@ -150,7 +151,8 @@ You can expand the console menu in two ways:
 
 ### Method 2: Edit `pipeline_steps.json` Manually
 Add a new object to the `steps` array in `pipeline_steps.json`:
-```json
+```
+json
 {
   "id": "custom_fix",
   "name": "My Custom Schema Fixer",
